@@ -45,10 +45,12 @@
         <div class="row my-3">
             <div class="col-10 px-0">
                 <pre id="balance-alert" class="alert alert-info"></pre>
+                <pre id="pkh-alert" class="alert alert-info"></pre>
             </div>
             <div class="col-2">
                 <button id="get-balance-button" type="button" class="btn btn-primary mb-2">Get Balance</button>
-                <button id="mint-test-NFT-button" type="button" class="btn btn-primary">Mint Test NFT</button>
+                <button id="mint-test-NFT-button" type="button" class="btn btn-primary mb-2">Mint Test NFT</button>
+                <button id="get-pkh-button" type="button" class="btn btn-primary">Get Change Address pkh</button>
             </div>
         </div>
         <div class="row my-3">
@@ -94,12 +96,12 @@
                                 </div>
                             </div>
                         </div>
-                        <h3>Extra Ouputs</h3>
+                        <h3>Extra Outputs</h3>
                         <ul id="extra-output-list" class="px-3"></ul>
                         <button id="add-output-redeem-button" data-toggle="modal" data-target="#output-redeem-modal"
                             type="button" class="btn btn-primary">Add Extra Outputs</button>
                         <div class="form-group my-3">
-                            <label for="datum-json-redeem">Datum JSON</label>
+                            <label for="datum-json-redeem">Script Input Datum JSON</label>
                             <textarea class="form-control" id="datum-json-redeem" rows="3"></textarea>
                         </div>
                         <div class="form-group">
@@ -144,6 +146,10 @@
                         Field</button>
                     <button id="remove-redeem-send-asset-button" type="button" class="btn btn-warning">Remove Asset
                         Field</button>
+                    <div class="form-group my-3">
+                        <label for="datum-json-redeem-output">Output Datum JSON</label>
+                        <textarea class="form-control" id="datum-json-redeem-output" rows="3"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

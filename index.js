@@ -8,6 +8,7 @@ const accessButton = document.getElementById("access-button")
 const saveContractButton = document.getElementById("save-contract-button")
 const getBalanceButton = document.getElementById("get-balance-button")
 const mintTestNFTButton = document.getElementById("mint-test-NFT-button")
+const getPkhButton = document.getElementById("get-pkh-button")
 const addAssetButton = document.getElementById("add-asset-button")
 const removeAssetButton = document.getElementById("remove-asset-button")
 const addRedeemSendAssetButton = document.getElementById("add-redeem-send-asset-button")
@@ -109,6 +110,15 @@ mintTestNFTButton.addEventListener('click', async () => {
         }).catch(err => {
             setOnScreenAlert(err.info, "danger")
         })
+})
+
+getPkhButton.addEventListener('click', async () => {
+    checkApiAvailable()
+    const hexChangeAddress = await api.getChangeAddress()
+    const pkhAlert = document.getElementById("pkh-alert")
+    pkhAlert.textContent = utils.bytesToHex(
+        CardanoWasm.BaseAddress.from_address(CardanoWasm.Address.from_bytes(utils.hexToBytes(hexChangeAddress)))
+        .payment_cred().to_keyhash().to_bytes())
 })
 
 addAssetButton.addEventListener('click', () => {
@@ -292,6 +302,8 @@ addRedeemOutputButton.addEventListener('click', () => {
     const sendAddress = document.getElementById("redeem-send-address").value
     const assetList = document.getElementById("redeem-asset-list")
     const lovelaceValue = assetList.children[0].getElementsByTagName("input")[0].value
+    const datumJSON = document.getElementById("datum-json-redeem-output").value
+
     const sendAssets = []
     for (let i = 1; i < assetList.children.length; i++) {
         const assetRow = assetList.children[i].getElementsByTagName("input")
@@ -303,7 +315,8 @@ addRedeemOutputButton.addEventListener('click', () => {
     const transactionInfo = {
         "address": sendAddress,
         "lovelaceValue": lovelaceValue,
-        "assets": sendAssets
+        "assets": sendAssets,
+        "datum": JSON.parse(datumJSON)
     }
 
     const extraOutputList = document.getElementById("extra-output-list")
@@ -354,20 +367,9 @@ submitRedeemButton.addEventListener('click', async () => {
     const wasmTxInputsBuilder = CardanoWasm.TxInputsBuilder.new()
 
     // get user input datum and redeemer
-    let wasmDatum
-    let wasmRedeemerData
 
-    try {
-        wasmDatum = jsonDataToWasmDatum(datum)
-        wasmRedeemerData = jsonDataToWasmDatum(redeemer)
-    } catch (err) {
-        if (err == "") {
-            setOnScreenAlert("Error occurred when parsing Datum, please check it", "danger")
-        } else {
-            setOnScreenAlert(err, "danger")
-        }
-        return
-    }
+    const wasmDatum = jsonDataToWasmDatum(datum)
+    const wasmRedeemerData = jsonDataToWasmDatum(redeemer)
 
     // build script input witness
     const wasmRedeemer = CardanoWasm.Redeemer.new(
@@ -375,8 +377,8 @@ submitRedeemButton.addEventListener('click', async () => {
         CardanoWasm.BigNum.zero(),
         wasmRedeemerData,
         CardanoWasm.ExUnits.new(
-            CardanoWasm.BigNum.from_str('8000'),
-            CardanoWasm.BigNum.from_str('9764680'),
+            CardanoWasm.BigNum.from_str('320000'),
+            CardanoWasm.BigNum.from_str('397646800'),
         )
     )
     const plutusScriptWitness = CardanoWasm.PlutusWitness.new(
@@ -414,8 +416,6 @@ submitRedeemButton.addEventListener('click', async () => {
         extraOutputsList.push(JSON.parse(extraOutputs[i].value))
     }
 
-    console.log(extraOutputsList)
-
     // loop through every extra output and put it in the extra value, and also add the output to tx builder
     for (let i = 0; i < extraOutputsList.length; i++) {
         const output = extraOutputsList[i]
@@ -429,10 +429,16 @@ submitRedeemButton.addEventListener('click', async () => {
         }
         outputWasmValue.set_multiasset(wasmMultiAsset)
 
-        txBuilder.add_output(CardanoWasm.TransactionOutput.new(
+        const wasmTxOutput = CardanoWasm.TransactionOutput.new(
             CardanoWasm.Address.from_bech32(output.address),
             outputWasmValue
-        ))
+        )
+
+        if (Object.keys(extraOutputsList[i].datum).length !== 0) {
+            wasmTxOutput.set_data_hash(CardanoWasm.hash_plutus_data(jsonDataToWasmDatum(extraOutputsList[i].datum)))
+        }
+
+        txBuilder.add_output(wasmTxOutput)
         // we add the required funds into the extra value
         extraWasmValue.checked_add(outputWasmValue)
     }
@@ -538,7 +544,7 @@ const jsonDataToWasmDatum = (data) => {
     const keys = Object.keys(dataObj)
     switch (keys[0]) {
         case "fields":
-            if (!dataObj.constructor) {
+            if (dataObj.constructor == undefined) {
                 setOnScreenAlert("Fields datum doesn't have a constructor property", "danger")
                 return
             }
