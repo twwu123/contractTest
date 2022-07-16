@@ -11,7 +11,7 @@
   "author": "Tsz Wai",
   "license": "ISC",
   "devDependencies": {
-    "@emurgo/cardano-serialization-lib-browser": "^10.2.0",
+    "@emurgo/cardano-serialization-lib-browser": "11.0.0-rc.6",
     "copy-webpack-plugin": "^11.0.0",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2",
