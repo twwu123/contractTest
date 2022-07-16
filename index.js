@@ -43,9 +43,9 @@ getBalanceButton.addEventListener('click', async () => {
     checkApiAvailable()
     const hexBalance = await api.getBalance()
     const wasmBalanceValue = CardanoWasm.Value.from_bytes(utils.hexToBytes(hexBalance))
-    const wasmAssetPolicies = wasmBalanceValue.multiasset().keys()
+    const wasmAssetPolicies = wasmBalanceValue.multiasset()?.keys()
     const assets = { "lovelaces": wasmBalanceValue.coin().to_str() }
-    for (let i = 0; i < wasmAssetPolicies.len(); i++) {
+    for (let i = 0; i < wasmAssetPolicies?.len(); i++) {
         const policyId = utils.bytesToHex(wasmAssetPolicies.get(i).to_bytes())
         const wasmAssetNames = wasmBalanceValue.multiasset().get(wasmAssetPolicies.get(i)).keys()
         assets[policyId] = {}
