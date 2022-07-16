@@ -377,10 +377,11 @@ submitRedeemButton.addEventListener('click', async () => {
         CardanoWasm.BigNum.zero(),
         wasmRedeemerData,
         CardanoWasm.ExUnits.new(
-            CardanoWasm.BigNum.from_str('320000'),
-            CardanoWasm.BigNum.from_str('397646800'),
+            CardanoWasm.BigNum.from_str('1700'),
+            CardanoWasm.BigNum.from_str('368100'),
         )
     )
+    
     const plutusScriptWitness = CardanoWasm.PlutusWitness.new(
         CardanoWasm.PlutusScript.from_bytes(utils.hexToBytes(plutusScriptHex)),
         wasmDatum,
@@ -435,7 +436,9 @@ submitRedeemButton.addEventListener('click', async () => {
         )
 
         if (Object.keys(extraOutputsList[i].datum).length !== 0) {
-            wasmTxOutput.set_data_hash(CardanoWasm.hash_plutus_data(jsonDataToWasmDatum(extraOutputsList[i].datum)))
+            const wasmDatum = jsonDataToWasmDatum(extraOutputsList[i].datum)
+            wasmTxOutput.set_data_hash(CardanoWasm.hash_plutus_data(wasmDatum))
+            // wasmTxOutput.set_plutus_data(wasmDatum)
         }
 
         txBuilder.add_output(wasmTxOutput)
@@ -467,7 +470,7 @@ submitRedeemButton.addEventListener('click', async () => {
     txBuilder.add_change_if_needed(wasmChangeAddress)
 
     // this handles all hashing of plutus witnesses
-    txBuilder.calc_script_data_hash(CardanoWasm.TxBuilderConstants.plutus_default_cost_models())
+    txBuilder.calc_script_data_hash(CardanoWasm.TxBuilderConstants.plutus_vasil_cost_models())
 
     const unsignedTransactionHex = utils.bytesToHex(txBuilder.build_tx().to_bytes())
 
@@ -537,7 +540,7 @@ const checkApiAvailable = () => {
 
 const jsonDataToWasmDatum = (data) => {
     if (data == "") {
-        setOnScreenAlert("Empty Datum isn't allowed")
+        setOnScreenAlert("Empty Datum isn't allowed", "danger")
         throw ("Empty Datum")
     }
     const dataObj = (typeof (data) == "string") ? JSON.parse(data) : data
